@@ -1,8 +1,14 @@
 import random
 import datetime
 from faker import Faker
-from models.automovel import Automovel 
-from database.connection import Session, create_tables
+from sqlalchemy.orm import Session
+
+from database.connections import get_db, create_tables
+from database.models import Automovel
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 fake = Faker('pt_BR')
 
@@ -49,40 +55,27 @@ def generate_fake_automovel_data():
         "data_revisao": fake.date_time_between(start_date='-5y', end_date='now')
     }
 
-def populate_automoveis_data(num_veiculos: int = 100):
-    """
-    Popula o banco de dados com um número especificado de veículos fictícios.
-    """
-    session = Session()
-
-    print(f"Gerando veículos fictícios...")
-
-    try:
-        for _ in range(num_veiculos):
-            data = generate_fake_automovel_data()
-            automovel = Automovel(**data)
-            session.add(automovel)
-
-        session.commit()
-        print(f"{num_veiculos} veículos inseridos com sucesso!")
-    except Exception as e:
-        session.rollback()
-        print(f"Erro ao inserir veículos: {e}")
-    finally:
-        session.close()
-
-def main():
-    """
-    criação do banco de dados e
-    população de dados.
-    """
-    print("Iniciando o script de automóveis...")
+def insert_fake_automoveis(num_records: int):
 
     create_tables()
 
-    populate_automoveis_data(num_veiculos=100)
-
-    print("\nProcesso concluído. O banco de dados 'automoveis.db' está pronto em ./data/")
+    db: Session = next(get_db())
+    try:
+        print(f"Gerando e inserindo {num_records} registros de automóveis")
+        for i in range(num_records):
+            automovel_data = generate_fake_automovel_data()
+            automovel = Automovel(**automovel_data)
+            db.add(automovel)
+            if (i + 1) % 100 == 0:
+                db.commit()
+        db.commit()
+        print(f"Total de {num_records} registros inseridos")
+    except Exception as e:
+        db.rollback()
+        print(f"Ocorreu um erro: {e}")
+    finally:
+        db.close()
 
 if __name__ == "__main__":
-    main()
+    num_registros_a_gerar = 100
+    insert_fake_automoveis(num_registros_a_gerar)
