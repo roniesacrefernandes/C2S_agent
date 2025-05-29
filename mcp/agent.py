@@ -10,13 +10,8 @@ from langgraph.prebuilt import create_react_agent
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
-
-#from langchain.agents import Tool
-#from langchain_mcp_adapters.client import MultiServerMCPClient
 #from langchain_openai import ChatOpenAI
 
-
-# Carregar as variáveis de ambiente do arquivo .env
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -26,7 +21,7 @@ OPENAI_MODEL_ID = os.getenv("OPENAI_MODEL_ID")
 
 
 if not GROQ_API_KEY:
-    raise ValueError("A variável de ambiente 'GROQ_API_KEY' não está definida no arquivo .env.")
+    raise ValueError("A variável de ambiente 'GROQ_API_KEY' não está definida no arquivo .env")
 
 llm = ChatGroq(
     groq_api_key= GROQ_API_KEY,
@@ -60,7 +55,6 @@ async def main():
         async with ClientSession(read, write) as session:
             await session.initialize()
             tools = await load_mcp_tools(session)
-            #tools = []
             agent = create_react_agent(llm, tools)
 
             messages = [
@@ -74,7 +68,7 @@ async def main():
                 user_input = await asyncio.to_thread(input, "\nVocê: ")
 
                 if user_input.lower() in ["sair", "exit", "quit"]:
-                    print("Saindo do agente automotivo. Até mais!")
+                    print("Saindo do agente automotivo.")
                     break
 
                 messages.append(HumanMessage(content=user_input))
@@ -94,8 +88,8 @@ async def main():
                     if hasattr(last_message, 'content') and last_message.content:
                         print(f"\nAgente: {last_message.content}")
                     else:
-                        print("\nAgente: (Resposta não textual ou vazia)")
-                        print(f"Detalhes da resposta: {last_message}") # Para depuração
+                        print("\nAgente: (Sem respostas)")
+                        print(f"Detalhes da resposta: {last_message}") 
 
                 except Exception as e:
                     print(f"\nErro ao processar solicitação: {e}")
@@ -103,25 +97,6 @@ async def main():
                     if messages and isinstance(messages[-1], HumanMessage):
                         messages.pop()
                     print("Por favor, tente novamente.")
-
-            # def stream_graph_updates(user_input: str):
-            #     for event in graph.stream({"messages": [{"role": "user", "content": user_input}]}):
-            #         for value in event.values():
-            #             print("Assistant:", value["messages"][-1].content)
-
-            # while True:
-            #     try:
-            #         user_input = input("User: ")
-            #         if user_input.lower() in ["quit", "exit", "q"]:
-            #             print("Goodbye!")
-            #             break
-            #         stream_graph_updates(user_input)
-            #     except:
-            #         # fallback if input() is not available
-            #         user_input = "What do you know about LangGraph?"
-            #         print("User: " + user_input)
-            #         stream_graph_updates(user_input)
-            #         break
                 
 if __name__ == "__main__":
     asyncio.run(main())
