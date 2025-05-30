@@ -18,7 +18,7 @@ Servidor MCP (Model Context Protocol) para gerenciar e analisar dados de automó
 
 1. **Clone o repositório**
 ```bash
-git clone <seu-repositorio>
+git clone https://github.com/roniesacrefernandes/C2S_agent.git
 cd mcp-automoveis
 ```
 
